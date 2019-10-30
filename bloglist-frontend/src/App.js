@@ -3,7 +3,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import { connect } from 'react-redux'
 import Notification from './components/Notification'
-import Blog from './components/Blog'
+import Blogs from './components/Blogs'
 import Blogform from './components/Blogform'
 import Toggleable from './components/Togglable'
 import './index.css'
@@ -11,8 +11,10 @@ import Loginform from './components/Loginform'
 import { useField } from './hooks'
 import { setNotification } from './reducers/notificationReducer'
 import { setUser, resetUser } from './reducers/usersReducer'
-import { addBlog, initializeBlogs, setBlogs } from './reducers/blogsReducer'
+import { addBlog, setBlogs } from './reducers/blogsReducer'
 import Users from './components/Users'
+import User from './components/User'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
 
 const App = (props) => {
   const [newBlogTitle, setNewBlogTitle] = useState('')
@@ -20,10 +22,6 @@ const App = (props) => {
   const [newBlogUrl, setNewBlogUrl] = useState('')
   const username = useField('text')
   const password = useField('password')
-
-  useEffect(() => {
-    props.initializeBlogs()
-  }, [])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -77,66 +75,46 @@ const App = (props) => {
     props.setNotification(`blog ${newBlog.title} by ${newBlog.author} added`, 'success', 10)
   }
 
-  const rows = () => {
-    console.log(props.blogs)
-    return props.blogs.map(blog =>
-      <Blog
-        blog={blog}
-        key={blog.id}
-        likeHandler={handleLike}
-        removeHandler={removeBlog}
-        showRemove={props.user.id === blog.user.id ? true : false}
-      />
-    )
-  }
-
-  const handleLike = async blog => {
-    await blogService.like(blog)
-    getBlogs()
-  }
-
-  const removeBlog = async blog => {
-    await blogService.remove(blog)
-    getBlogs()
-  }
-
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogAppUser')
     window.location.reload()
   }
-  console.log(props.user.id)
   return (
     <div>
-      <Notification />
-
-      {!props.user.username ?
-        <Loginform
-          handleLogin={handleLogin}
-          username={username}
-          password={password}
-        />
-        : <div>
-          <p>{props.user.username} logged in
-            <button onClick={handleLogout}>Log out</button>
-          </p>
-          <Toggleable buttonLabel='new blog'>
-            <Blogform
-              submit={addBlog}
-              changeTitle={setNewBlogTitle}
-              changeAuthor={setNewBlogAuthor}
-              changeUrl={setNewBlogUrl}
-              titleValue={newBlogTitle}
-              authorValue={newBlogAuthor}
-              urlValue={newBlogUrl}
+      <Router>
+        <Notification />
+        {!props.user.username ?
+          <Loginform
+            handleLogin={handleLogin}
+            username={username}
+            password={password}
+          />
+          : <div>
+            <p>{props.user.username} logged in
+              <button onClick={handleLogout}>Log out</button>
+            </p>
+            <Route exact path="/" render={() =>
+            <>
+            <Toggleable buttonLabel='new blog'>
+              <Blogform
+                submit={addBlog}
+                changeTitle={setNewBlogTitle}
+                changeAuthor={setNewBlogAuthor}
+                changeUrl={setNewBlogUrl}
+                titleValue={newBlogTitle}
+                authorValue={newBlogAuthor}
+                urlValue={newBlogUrl}
+              />
+            </Toggleable>
+            <Blogs />
+            </>}
             />
-          </Toggleable>
-          <h1>Blogs</h1>
-          <ul>
-            {rows()}
-          </ul>
-          <Users />
-        </div>
-      }
+            <Route exact path="/users" render={() => <Users />} />
+            <Route exact path="/users/:id" render={({ match }) =>
+              <User userId={match.params.id}/>} />
+          </div>
+        }
+      </Router>
     </div>
   )
 }
@@ -144,7 +122,6 @@ const App = (props) => {
 const mapDispatchProps = {
   setNotification,
   addBlog,
-  initializeBlogs,
   setBlogs,
   setUser,
   resetUser

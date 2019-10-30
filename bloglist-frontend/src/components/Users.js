@@ -1,32 +1,33 @@
 import React, { useState, useEffect } from 'react'
 import usersService from '../services/users'
-import User from './User'
+import { Link } from 'react-router-dom'
 
 const Users = () => {
   const [users, setUsers] = useState([])
   useEffect(() => {
-    const getUsers = async () => {
-      const data = await usersService.getAll()
-      const users = data
-        .filter(user => user.username !== 'root')
-      setUsers(users)
-    }
-    getUsers()
+    usersService.getAll()
+      .then(users => {
+        setUsers(users.filter(user => user.username !== 'root'))
+      })
   }, [])
-  console.log(users)
   return (
     <div>
+      <h1>Users</h1>
       <table>
-        <h1>Users</h1>
-        <tr>
-          <th></th>
-          <th>blogs created</th>
-        </tr>
-        {users.map(user =>
-          <tr key={user.id}>
-            <User user={user} />
+        <tbody>
+          <tr>
+            <th></th>
+            <th>blogs created</th>
           </tr>
-        )}
+          {users.map(user =>
+            <tr key={user.id}>
+              <td>
+                <Link to={`/users/${user.id}`} >{user.username}</Link>
+              </td>
+              <td>{user.blogs.length}</td>
+            </tr>
+          )}
+        </tbody>
       </table>
     </div>
   )

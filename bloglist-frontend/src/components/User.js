@@ -1,11 +1,20 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import usersService from '../services/users'
 
-const User = ({ user }) => {
+const User = ({ userId }) => {
+  const [user, setUser] = useState({})
+  useEffect(() => {
+    usersService.getUser(userId).then(user => setUser(user))
+  }, [])
   return (
-    <>
-      <td><a href='#'>{user.username}</a></td>
-      <td>{user.blogs.length}</td>
-    </>
+    <div>
+      <h2>{user.username}</h2>
+      <p>added blogs</p>
+      <ul>
+        {user.blogs ? user.blogs.map(blog => <li key={blog.id}>{blog.title}</li>)
+          : <></>}
+      </ul>
+    </div>
   )
 }
 
